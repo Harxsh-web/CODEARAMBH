@@ -36,15 +36,8 @@ const formSchema = z.object({
   leaderEmail: z.string().email({ message: "Valid email is required." }),
   leaderPhone: z.string().min(10, { message: "Valid phone number is required." }),
   projectIdea: z.string().min(10, { message: "Project idea must be at least 10 characters." }),
-  googleDriveUrl: z.string().url({ message: "Valid Google Drive URL required" }),
-  pptFile: z.instanceof(File, { message: "Presentation file is required" })
-    .refine(file => file.size <= 5_000_000, "File size must be less than 5MB")
-    .refine(
-      file => ['application/vnd.ms-powerpoint', 
-               'application/vnd.openxmlformats-officedocument.presentationml.presentation']
-               .includes(file.type),
-      "Only .ppt and .pptx files are accepted"
-    ),
+  videoGoogleDriveUrl: z.string().url({ message: "Valid video Google Drive URL required" }),
+  pptGoogleDriveUrl: z.string().url({ message: "Valid presentation Google Drive URL required" }),
   members: z.array(
     z.object({
       name: z.string().min(2, { message: "Member name is required." }),
@@ -59,7 +52,6 @@ export const RegistrationForm = () => {
     register,
     handleSubmit,
     control,
-    watch,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(formSchema),
@@ -71,8 +63,8 @@ export const RegistrationForm = () => {
       leaderEmail: "",
       leaderPhone: "",
       projectIdea: "",
-      googleDriveUrl: "",
-      pptFile: undefined,
+      videoGoogleDriveUrl: "",
+      pptGoogleDriveUrl: "",
       members: [{ name: "", email: "", phone: "" }],
     },
   });
@@ -84,7 +76,6 @@ export const RegistrationForm = () => {
 
   const [teamSize, setTeamSize] = useState(2);
   const [formSubmitted, setFormSubmitted] = useState(false);
-  const pptFile = watch("pptFile");
 
   useEffect(() => {
     const newSize = teamSize - 1;
@@ -102,24 +93,17 @@ export const RegistrationForm = () => {
   }, [teamSize, append, remove, fields.length]);
 
   const onSubmit = async (data) => {
-    // Create FormData for file upload
     const formData = new FormData();
     
-    // Append all form data
     Object.entries(data).forEach(([key, value]) => {
-      if (key === "pptFile") {
-        formData.append(key, value);
-      } else if (key === "members") {
+      if (key === "members") {
         formData.append(key, JSON.stringify(value));
       } else {
         formData.append(key, value);
       }
     });
 
-    // Log the form data (replace with actual API call)
     console.log("Form Data:", Object.fromEntries(formData));
-    console.log("PPT File:", data.pptFile);
-
     toast.success("Registration successful!");
     setFormSubmitted(true);
   };
@@ -251,40 +235,28 @@ export const RegistrationForm = () => {
                 {errors.projectIdea && <p className="text-red-500">{errors.projectIdea.message}</p>}
               </div>
 
-              {/* Google Drive URL */}
+              {/* Google Drive URLs */}
               <div className="space-y-2">
-                <Label>Google Drive URL</Label>
+                <Label>Project Video URL (Google Drive)</Label>
                 <Input 
-                  {...register("googleDriveUrl")} 
+                  {...register("videoGoogleDriveUrl")} 
                   type="url" 
                   placeholder="https://drive.google.com/..." 
                 />
-                {errors.googleDriveUrl && (
-                  <p className="text-red-500">{errors.googleDriveUrl.message}</p>
+                {errors.videoGoogleDriveUrl && (
+                  <p className="text-red-500">{errors.videoGoogleDriveUrl.message}</p>
                 )}
               </div>
 
-              {/* PPT File Upload */}
               <div className="space-y-2">
-                <Label>Presentation File (PPT/PPTX - Max 5MB)</Label>
-                <Controller
-                  name="pptFile"
-                  control={control}
-                  render={({ field }) => (
-                    <Input
-                      type="file"
-                      accept=".ppt,.pptx"
-                      onChange={(e) => field.onChange(e.target.files?.[0])}
-                    />
-                  )}
+                <Label>Presentation URL (Google Drive)</Label>
+                <Input 
+                  {...register("pptGoogleDriveUrl")} 
+                  type="url" 
+                  placeholder="https://drive.google.com/..." 
                 />
-                {errors.pptFile && (
-                  <p className="text-red-500">{errors.pptFile.message}</p>
-                )}
-                {pptFile && (
-                  <p className="text-sm text-gray-500">
-                    Selected file: {pptFile.name} ({Math.round(pptFile.size / 1024)} KB)
-                  </p>
+                {errors.pptGoogleDriveUrl && (
+                  <p className="text-red-500">{errors.pptGoogleDriveUrl.message}</p>
                 )}
               </div>
 
