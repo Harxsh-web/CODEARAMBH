@@ -104,8 +104,26 @@ export const RegistrationForm = () => {
     });
 
     console.log("Form Data:", Object.fromEntries(formData));
-    toast.success("Registration successful!");
-    setFormSubmitted(true);
+    try {
+        const response = await fetch(`https://codearambh-backend.onrender.com/api/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(Object.fromEntries(formData)),
+        });
+  
+        const result = await response.json();
+        console.log(result)
+        if (!response.ok) {
+          toast.error("Something went wrong!!!");
+          throw new Error(result.error || "Something went wrong");
+        }
+  
+        // Success: Hide form and show message
+        toast.success("Registration successful!");
+        setFormSubmitted(true);
+      } catch (error) {
+        toast.error(error.message);
+      }
   };
 
   return (
